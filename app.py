@@ -6,8 +6,28 @@ from flask import url_for
 from flask_httpauth import HTTPBasicAuth
 from functools import wraps
 from passlib.hash import sha256_crypt
+import pika
+import Events
+import json
+import datetime
+import time
 
 app = Flask(__name__)
+
+connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+channel = connection.channel()
+channel.queue_declare(queue='task_queue', durable=True)
+
+# message = "2"
+# channel.basic_publish(exchange='',
+#                       routing_key='task_queue',
+#                       body=message,
+#                       properties=pika.BasicProperties(
+#                          delivery_mode = 2, # make message persistent
+#                       ))
+
+#print(" [x] Sent %r" % message)
+#        connection.close()
 
 ###Auth
 auth = HTTPBasicAuth()
@@ -16,6 +36,7 @@ def check_auth(username, password):
     password combination is valid.
     """
     pw = "$5$rounds=535000$TbjfFguG9yEaDQWS$6joRKlWuiXMBP8dTYoMQ5woWDepmcfcGWBKZtX9vvT0"
+
     return username == 'Nergy' and sha256_crypt.verify(password, pw)
 
 def authenticate():
@@ -28,10 +49,30 @@ def authenticate():
 def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
+        date = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
         auth = request.authorization
         if not auth or not check_auth(auth.username, auth.password):
+            payload = Events.loginFailedEvent(date, "geheim")  # maak loginSuccesEvent
+            message = json.dumps(payload.__dict__)  # naar json
+            channel.basic_publish(exchange='',
+                                  routing_key='task_queue',
+                                  body=message,
+                                  properties=pika.BasicProperties(
+                                      delivery_mode=2,  # make message persistent
+                                  ))
             return authenticate()
+
+        payload = Events.loginSuccesEvent(date)  # maak loginSuccesEvent
+        message = json.dumps(payload.__dict__)  # naar json
+        channel.basic_publish(exchange='',
+                              routing_key='task_queue',
+                              body=message,
+                              properties=pika.BasicProperties(
+                                  delivery_mode=2,  # make message persistent
+                              ))
         return f(*args, **kwargs)
+
+
     return decorated
 
 
@@ -74,7 +115,21 @@ tasks = [
 ]
 ### API-Controller
 
+@app.route('/', methods=['GET']) # fancy
+def home():
+    date = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+    payload = Events.pageVisitedEvent(date, "homepage")  # maak loginSuccesEvent
+    message = json.dumps(payload.__dict__)  # naar json
+    channel.basic_publish(exchange='',
+                          routing_key='task_queue',
+                          body=message,
+                          properties=pika.BasicProperties(
+                              delivery_mode=2,  # make message persistent
+                          ))
+    return "Welcome to the Home Page"
+
 @app.route('/todo/api/v1.0/tasks', methods=['GET']) # fancy
+@requires_auth
 def get_tasks():
     return jsonify({'tasks': [make_public_tasks(task) for task in tasks]})
 
