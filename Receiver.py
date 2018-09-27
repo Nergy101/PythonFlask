@@ -1,4 +1,3 @@
-#!flask/bin/python
 import pika
 import json
 import Events
@@ -20,8 +19,8 @@ def eventCallback(ch, method, properties, body):
             print("Succesfull login occured at: "+ message['timestamp'] + " count: "
                   + str(Events.loginSuccesEvent.Succes(Events.loginSuccesEvent)))
         if eventType == "loginFailedEvent":
-            print("Failed login occured, trying with: '" + message['triedPassword'] + "' at: "+ message['timestamp'] + " count: "
-                  + str(Events.loginFailedEvent.Failed(Events.loginFailedEvent)))
+            print("Failed login occured, trying with: '" + message['triedPassword'] + "' at: "+ message['timestamp'] +
+                  " count: "  + str(Events.loginFailedEvent.Failed(Events.loginFailedEvent)))
         #pageVisitedEvent
         if eventType == "pageVisitedEvent":
             print("Somebody from ip:'" + message['ip'] + "' visited the "+message['pageName']+
@@ -31,7 +30,7 @@ def eventCallback(ch, method, properties, body):
         #buttonPushedEvent
 
     except ValueError as error:
-        print("eventType not recognized: " + error.args)
+        print("eventType not recognized: " + str(error.args))
 
 
     ch.basic_ack(delivery_tag = method.delivery_tag)

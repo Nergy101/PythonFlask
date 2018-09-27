@@ -1,5 +1,5 @@
 #!flask/bin/python
-from flask import Flask, jsonify,make_response,request, Response,url_for, render_template
+from flask import Flask, jsonify, make_response, request, Response, url_for, render_template
 from flask_httpauth import HTTPBasicAuth
 from functools import wraps
 from passlib.hash import sha256_crypt
@@ -111,11 +111,11 @@ tasks = [
     }
 ]
 ### API-Controller
-ButtonPressed=0
 @app.route('/', methods=['GET', "POST"]) # fancy
 def home():
     if request.method == "POST":
         text = open('text.txt', 'r').read()
+        ButtonPressed =+ 1
         time.sleep(2)
         return render_template('hacked.html', status = "INTERNAL_FAILURE", text = text )
     else:
@@ -202,4 +202,5 @@ def bad_request(error):
     return make_response(jsonify({'error': 'Bad Request'}), 400)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    #app.run(host='0.0.0.0', port=80, debug=True)       #zelf beslissen hiermee
+    app.run(debug=True) #localhost:5000
