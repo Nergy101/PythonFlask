@@ -1,0 +1,15 @@
+Flas==1.0.2	1.0.2
+Flask-HTTPAuth==3.2.4
+Jinja2==2.10
+MarkupSafe==1.0
+Pillow==5.2.0
+Werkzeug==0.14.1
+click==6.7
+fpdf==1.7.2
+fpdf2==2.0.0
+itsdangerous==0.24
+passlib==1.7.1
+pika==0.12.0
+pip==18.0
+setuptools==40.3.0
+six==1.11.0
