@@ -1,5 +1,5 @@
 #!flask/bin/python
-from flask import Flask, jsonify, make_response, request, Response, url_for, render_template
+from flask import Flask, jsonify, make_response, request, Response, url_for, render_template, Markup
 from flask_httpauth import HTTPBasicAuth
 from functools import wraps
 from passlib.hash import sha256_crypt
@@ -111,16 +111,18 @@ tasks = [
     }
 ]
 ### API-Controller
-@app.route('/', methods=['GET', "POST"]) # fancy
+@app.route('/', methods=['GET', "POST", "PUT"]) # fancy
 def home():
     if request.method == "POST":
         text = open('text.txt', 'r').read()
-        ButtonPressed =+ 1
+        knop = Markup('<form method="put"><input class="button button5" type="submit" value="UNDO_HACKS" ></form>')
         time.sleep(2)
-        return render_template('hacked.html', status = "INTERNAL_FAILURE", text = text )
+        return render_template('hacked.html', status = "INTERNAL_FAILURE", text = text, extraknop = knop )
+
     else:
         date = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
         ip = str({'ip': request.remote_addr})
+        ip="Your IP is: "+ip[8:-2]
 
         payload = Events.pageVisitedEvent("Home", date, ip)
         message = json.dumps(payload.__dict__)  # naar json
