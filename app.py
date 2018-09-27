@@ -1,8 +1,5 @@
 #!flask/bin/python
-from flask import Flask, jsonify
-from flask import make_response
-from flask import request, Response
-from flask import url_for
+from flask import Flask, jsonify,make_response,request, Response,url_for, render_template
 from flask_httpauth import HTTPBasicAuth
 from functools import wraps
 from passlib.hash import sha256_crypt
@@ -11,6 +8,7 @@ import Events
 import json
 import datetime
 import time
+import os
 
 app = Flask(__name__)
 
@@ -114,19 +112,27 @@ tasks = [
     }
 ]
 ### API-Controller
-
-@app.route('/', methods=['GET']) # fancy
+ButtonPressed=0
+@app.route('/', methods=['GET', "POST"]) # fancy
 def home():
-    date = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-    payload = Events.pageVisitedEvent(date, "homepage")  # maak loginSuccesEvent
-    message = json.dumps(payload.__dict__)  # naar json
-    channel.basic_publish(exchange='',
-                          routing_key='task_queue',
-                          body=message,
-                          properties=pika.BasicProperties(
-                              delivery_mode=2,  # make message persistent
-                          ))
-    return "Welcome to the Home Page"
+    if request.method == "POST":
+        text = open('text.txt', 'r').read()
+        time.sleep(2)
+        return render_template('hacked.html', status = "INTERNAL_FAILURE", text = text )
+    else:
+        date = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+        ip = str({'ip': request.remote_addr})
+
+        payload = Events.pageVisitedEvent("Home", date, ip)
+        message = json.dumps(payload.__dict__)  # naar json
+        channel.basic_publish(exchange='',
+                              routing_key='task_queue',
+                              body=message,
+                              properties=pika.BasicProperties(
+                                  delivery_mode=2,  # make message persistent
+                              ))
+
+        return render_template('hackpage.html', ip = ip)
 
 @app.route('/todo/api/v1.0/tasks', methods=['GET']) # fancy
 @requires_auth

@@ -43,6 +43,12 @@ class HackEvent:  #user(IP), timestamp, status(critical)
     self.age = age
 
 class pageVisitedEvent:
-  def __init__(self, pageName, timestamp): #pagename, user(IP)?, timestamp,
-    self.pageName = pageName
-    self.timestamp= timestamp
+    totalVisitCount = 0
+    def __init__(self, pageName, timestamp, ip):
+        self.pageName = pageName
+        self.timestamp = timestamp
+        self.type = "pageVisitedEvent"
+        self.ip = ip
+    def Visited(self):
+      self.totalVisitCount += 1
+      return self.totalVisitCount

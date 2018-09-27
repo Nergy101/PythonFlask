@@ -1,11 +1,4 @@
 #!flask/bin/python
-from flask import Flask, jsonify
-from flask import make_response
-from flask import request, Response
-from flask import url_for
-from flask_httpauth import HTTPBasicAuth
-from functools import wraps
-from passlib.hash import sha256_crypt
 import pika
 import json
 import Events
@@ -32,20 +25,30 @@ def callback(ch, method, properties, body):
 
 
 def eventCallback(ch, method, properties, body):
-    message = body.decode('utf-8') # bytes to string
-    message = json.loads(message) # string to json
-    eventType = message['type']
+    message = body.decode('utf-8')   # bytes to string
+    message = json.loads(message)   # string to json
+    try:
+        eventType = message['type']
 
-    if eventType == "loginSuccesEvent":
-        print("Succesfull login occured at: "+ message['timestamp'])
-        print(Events.loginSuccesEvent.Succes(Events.loginSuccesEvent)) # "self"
-    if eventType == "loginFailedEvent":
-        print("Failed login occured at: "+ message['timestamp'])
-        print(Events.loginFailedEvent.Failed(Events.loginFailedEvent))  # "self"
-    #pageVisitedEvent
-    #buttonPushedEvent
+        if eventType == "loginSuccesEvent":
+            print("Succesfull login occured at: "+ message['timestamp'] + " count: "
+                  + str(Events.loginSuccesEvent.Succes(Events.loginSuccesEvent)))
+        if eventType == "loginFailedEvent":
+            print("Failed login occured at: "+ message['timestamp'] + " count: "
+                  + str(Events.loginFailedEvent.Failed(Events.loginFailedEvent)))
+        #pageVisitedEvent
+        if eventType == "pageVisitedEvent":
+            print("Somebody from ip:'" + message['ip'] + "' visited the "+message['pageName']+
+                  " page at: " + message['timestamp'] + " count: "
+                  + str(Events.pageVisitedEvent.Visited(Events.pageVisitedEvent)))
 
-    ch.basic_ack(delivery_tag=method.delivery_tag)
+        #buttonPushedEvent
+
+    except ValueError as error:
+        print("eventType not recognized: " + error.args)
+
+
+    ch.basic_ack(delivery_tag = method.delivery_tag)
 
 channel.basic_qos(prefetch_count = 1)
 channel.basic_consume(eventCallback,
