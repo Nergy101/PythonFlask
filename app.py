@@ -11,19 +11,10 @@ import time
 
 app = Flask(__name__)
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host='https://steadflask.herokuapp.com/:80'))
+connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost')) #deze zou dus gwn moeten werken als je alleen je Flask ergens anders (openlijk) runt, als ie maar nogsteeds bij de localhost kan...
 channel = connection.channel()
 channel.queue_declare(queue='task_queue', durable=True)
 
-# message = "2"
-# channel.basic_publish(exchange='',
-#                       routing_key='task_queue',
-#                       body=message,
-#                       properties=pika.BasicProperties(
-#                          delivery_mode = 2, # make message persistent
-#                       ))
-
-#print(" [x] Sent %r" % message)
 #        connection.close()
 
 ###Auth
@@ -33,8 +24,32 @@ def check_auth(username, password):
     password combination is valid.
     """
     pw = "$5$rounds=535000$TbjfFguG9yEaDQWS$6joRKlWuiXMBP8dTYoMQ5woWDepmcfcGWBKZtX9vvT0"
+                        #TODO Nergy hashen
+    passed = username == 'Nergy' and sha256_crypt.verify(password, pw)
+    if not passed:
+        date = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
-    return username == 'Nergy' and sha256_crypt.verify(password, pw)
+        payload = Events.loginFailedEvent(date, password)  # maak loginSuccesEvent
+        message = json.dumps(payload.__dict__)  # naar json
+        channel.basic_publish(exchange='',
+                              routing_key='task_queue',
+                              body=message,
+                              properties=pika.BasicProperties(
+                                  delivery_mode=2,  # make message persistent
+                              ))
+
+
+
+        payload = Events.loginSuccesEvent(date)  # maak loginSuccesEvent
+        message = json.dumps(payload.__dict__)  # naar json
+        channel.basic_publish(exchange='',
+                              routing_key='task_queue',
+                              body=message,
+                              properties=pika.BasicProperties(
+                                  delivery_mode=2,  # make message persistent
+                              ))
+
+    return passed
 
 def authenticate():
     """Sends a 401 response that enables basic auth"""
@@ -46,27 +61,9 @@ def authenticate():
 def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        date = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
         auth = request.authorization
         if not auth or not check_auth(auth.username, auth.password):
-            payload = Events.loginFailedEvent(date, "geheim")  # maak loginSuccesEvent
-            message = json.dumps(payload.__dict__)  # naar json
-            channel.basic_publish(exchange='',
-                                  routing_key='task_queue',
-                                  body=message,
-                                  properties=pika.BasicProperties(
-                                      delivery_mode=2,  # make message persistent
-                                  ))
             return authenticate()
-
-        payload = Events.loginSuccesEvent(date)  # maak loginSuccesEvent
-        message = json.dumps(payload.__dict__)  # naar json
-        channel.basic_publish(exchange='',
-                              routing_key='task_queue',
-                              body=message,
-                              properties=pika.BasicProperties(
-                                  delivery_mode=2,  # make message persistent
-                              ))
         return f(*args, **kwargs)
 
 
@@ -74,7 +71,7 @@ def requires_auth(f):
 
 
 ###RESTFULL
-
+#adds urls to jsonstring
 def make_public_tasks(task):
 
     new_task = {}
@@ -96,17 +93,20 @@ def make_public_task(task):
     return new_task
 
 ##DB
+
+#TODO tasks uit binarized bestand trekken, ietsje meer veiligheid
+
 tasks = [
     {
         'id': 1,
-        'title': u'Buy groceries',
-        'description': u'Milk, Cheese, Pizza, Fruit, Tylenol',
+        'title': u'Destroy Stratis',
+        'description': u'Kill All Humans',
         'done': False
     },
     {
         'id': 2,
-        'title': u'Learn Python',
-        'description': u'Need to find a good Python tutorial on the web',
+        'title': u'Liberate Altis',
+        'description': u'Liberate them... Right.',
         'done': False
     }
 ]
@@ -199,7 +199,7 @@ def not_found(error):
 
 @app.errorhandler(400)
 def bad_request(error):
-    return make_response(jsonify({'error': 'Bar Request'}), 400)
+    return make_response(jsonify({'error': 'Bad Request'}), 400)
 
 if __name__ == '__main__':
     app.run(debug=True)
