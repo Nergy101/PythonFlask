@@ -11,7 +11,7 @@ import time
 
 app = Flask(__name__)
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host='127.0.0.1:80'))
+connection = pika.BlockingConnection(pika.ConnectionParameters(host='https://steadflask.herokuapp.com/:80'))
 channel = connection.channel()
 channel.queue_declare(queue='task_queue', durable=True)
 
