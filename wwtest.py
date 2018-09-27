@@ -1,6 +1,6 @@
 from passlib.hash import sha256_crypt
-password = sha256_crypt.hash("Etiam")
-password2 = sha256_crypt.hash("Etiam")
+password = sha256_crypt.hash("gajenietvinden")
+password2 = sha256_crypt.hash("gajenietvinden")
 # Etiam is het ww dat we hashen.
 #Deze hash gebruik je in je Programma.
 print(password)
@@ -10,4 +10,4 @@ print(password)
 #Het grappige is dat de hashes verschillend zijn, maar toch gelijk.
 
 #Dit is een van de beste/meest gebruikte manieren om iets geheim te houden
-print(sha256_crypt.verify("Etiam", password))
+print(sha256_crypt.verify("gajenietvinden", password))
