@@ -204,5 +204,5 @@ def bad_request(error):
     return make_response(jsonify({'error': 'Bad Request'}), 400)
 
 if __name__ == '__main__':
-    #app.run(host='0.0.0.0', port=80, debug=True)       #zelf beslissen hiermee
-    app.run(debug=True) #localhost:5000
+    app.run(host="192.168.1.30", port=5000)       #zelf beslissen hiermee         //192.168.1.30
+   #app.run(debug=True) #localhost:5000
